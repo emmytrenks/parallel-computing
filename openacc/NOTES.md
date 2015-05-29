@@ -1,5 +1,5 @@
 # Prerequisites
-On BlueWaters, running `module load craype-accel-nvidia35 cudatoolkit` is required to attach modules to the current login session.
+On [Blue Waters](https://bluewaters.ncsa.illinois.edu/), running `module load craype-accel-nvidia35 cudatoolkit` is required to attach modules to the current login session.
 ###### When compiling
 You must compile with `cc -h pragma=acc [...]`.
 # Core functionality
