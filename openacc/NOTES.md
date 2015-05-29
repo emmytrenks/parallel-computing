@@ -2,9 +2,9 @@
 On BlueWaters, running `module load craype-accel-nvidia35 cudatoolkit` is required to attach modules to the current login session.
 ###### When compiling
 You must compile with `cc -h pragma=acc [...]`.
-# Processor functionality
+# Core functionality
 Cores which are running the same task *always* run in lock step.
-This means operations such as branches or jumps are **not** allowed.
+This means operations such as branches or jumps are *permitted* but **highly** discouraged.
 There will be no issued warnings for this, as these pragmas are simply hints to the compiler saying
 >Please create my kernels for me!
 
