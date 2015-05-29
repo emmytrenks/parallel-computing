@@ -1,3 +1,15 @@
+# Configuration
+Setting the number of cores available on a system (or the number of threads you'd like to use) can be accomplished using the environment variable `OMP_NUM_THREADS`.
+```bash
+export OMP_NUM_THREADS=32
+```
+Alternatively, it can be set in the code (which overrides any set environment or previous variable).
+```c
+omp_set_num_threads(32);
+//or
+#pragma omp parallel num_threads(32)
+```
+
 # Memory
 Memory is shared (and thus restricted to the same system).
 
