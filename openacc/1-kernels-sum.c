@@ -13,6 +13,9 @@ int main(int argc, char **argv) {
     a1[i] = a2[i] = 1;
   }
 
+  //Tell the compiler to attempt to use GPU acceleration -- if successful
+  // by sure to copy in the full array a1 and a2, and to copy out a3.
+  //Copy in and out send and extract memory from the GPU respectively.
   #pragma acc kernels copyin(a1[0:sample], a2[0:sample]), copyout(a3[0:sample])
   for (int i = 0; i < sample; ++i) {
     a3[i] = a1[i] + a2[i];

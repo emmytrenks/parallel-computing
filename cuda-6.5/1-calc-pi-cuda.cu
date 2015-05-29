@@ -7,6 +7,7 @@ __global__ void calculateAreas(const int recs, const double w, const int offset,
   if (index >= recs) return;
   const double x = index * w;
   double h = 1 - x * x;
+  //Detect a 0 by accounting for roundoff error.
   h = h < DBL_EPSILON ? 0 : sqrt(h);
   areas[index] = w * h;
 }
@@ -26,6 +27,7 @@ void calculateArea(const int recs, double *area) {
   const int threadCount = 512, loops = ceil((double) recs / threadCount);
   const double width = 1.0 / recs;
   for (int c = 0; c < loops; ++c) {
+    //kernel<<<blocks, threads>>>
     calculateAreas<<<1, threadCount>>>(recs, width, c * threadCount, w_areas);
   }
   err = cudaMemcpy(areas, w_areas, recs * sizeof(double), cudaMemcpyDeviceToHost);
