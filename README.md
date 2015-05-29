@@ -1,2 +1,3 @@
 # Parallel Computing
-My scratch work for parallel and petascale computation. Pardon the git logs. Please find this of educational value.
+This is my **scratch** work for parallel computing.
+It is designed to showcase paradigms for frameworks often used in supercomputers.
