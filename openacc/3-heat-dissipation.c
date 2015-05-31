@@ -10,14 +10,15 @@
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
-void print(double *, const int, const int, const double);
-int parseArguments(int, char **, int *, int *, int *, int *, double *);
+void print(const int, double *, const int, const int, const double);
+int parseArguments(int, char **, int *, int *, int *, int *, double *, int *);
 
 int main(int argc, char **argv) {
   int timeSteps = 5, printSteps = 0;
   int metalWidth = 5, metalHeight = 10;
   double heaterTemp = 100.0;
-  if (parseArguments(argc, argv, &timeSteps, &printSteps, &metalWidth, &metalHeight, &heaterTemp)) return 1;
+  int color = 0;
+  if (parseArguments(argc, argv, &timeSteps, &printSteps, &metalWidth, &metalHeight, &heaterTemp, &color)) return 1;
   const int ENVIRONMENT_WIDTH = metalWidth + 2, ENVIRONMENT_HEIGHT = metalHeight + 2;
   const int METAL_LEN = metalWidth * metalHeight, ENVIRONMENT_LEN = ENVIRONMENT_WIDTH * ENVIRONMENT_HEIGHT;
   double *environment = malloc(ENVIRONMENT_LEN * sizeof(double));
@@ -30,7 +31,7 @@ int main(int argc, char **argv) {
       environment[i] = 0;
     }
   }
-  print(environment, ENVIRONMENT_WIDTH, ENVIRONMENT_HEIGHT, heaterTemp);
+  print(color, environment, ENVIRONMENT_WIDTH, ENVIRONMENT_HEIGHT, heaterTemp);
   double *metal = malloc(METAL_LEN * sizeof(double));
   int i;
   #pragma acc data copy(environment[0:ENVIRONMENT_LEN]), create(metal[0:METAL_LEN], i)
@@ -67,41 +68,41 @@ int main(int argc, char **argv) {
         environment[index] = metal[i];
       }
       if (printSteps) {
-        print(environment, ENVIRONMENT_WIDTH, ENVIRONMENT_HEIGHT, heaterTemp);
+        print(color, environment, ENVIRONMENT_WIDTH, ENVIRONMENT_HEIGHT, heaterTemp);
       }
     }
   }
   if (!printSteps) {
-    print(environment, ENVIRONMENT_WIDTH, ENVIRONMENT_HEIGHT, heaterTemp);
+    print(color, environment, ENVIRONMENT_WIDTH, ENVIRONMENT_HEIGHT, heaterTemp);
   }
   free(environment);
   free(metal);
 }
 
-void print(double *arr, const int w, const int h, const double maxTemp) {
+void print(const int color, double *arr, const int w, const int h, const double maxTemp) {
   for (int i = 0; i < w * h; ++i) {
     const int r = i / w, c = i % w;
     if (r != 0 && c == 0) puts("");
     char buffer[32];
     if (arr[i] >= maxTemp * 0.9) {
-      sprintf(buffer, ANSI_COLOR_RED "%.3f" ANSI_COLOR_RESET, arr[i]);
+      sprintf(buffer, "%s%.3f%s", arr[i], (color ? ANSI_COLOR_RED : ""), (color ? ANSI_COLOR_RESET : ""));
     } else if (arr[i] >= maxTemp * 0.75) {
-      sprintf(buffer, ANSI_COLOR_MAGENTA "%.3f" ANSI_COLOR_RESET, arr[i]);
+      sprintf(buffer, "%s%.3f%s", arr[i], (color ? ANSI_COLOR_MAGENTA : ""), (color ? ANSI_COLOR_RESET : ""));
     } else if (arr[i] >= maxTemp * 0.5) {
-      sprintf(buffer, ANSI_COLOR_YELLOW "%.3f" ANSI_COLOR_RESET, arr[i]);
+      sprintf(buffer, "%s%.3f%s", arr[i], (color ? ANSI_COLOR_YELLOW : ""), (color ? ANSI_COLOR_RESET : ""));
     } else if (arr[i] >= maxTemp * 0.25) {
-      sprintf(buffer, ANSI_COLOR_CYAN "%.3f" ANSI_COLOR_RESET, arr[i]);
+      sprintf(buffer, "%s%.3f%s", arr[i], (color ? ANSI_COLOR_CYAN : ""), (color ? ANSI_COLOR_RESET : ""));
     } else {
-      sprintf(buffer, ANSI_COLOR_BLUE "%.3f" ANSI_COLOR_RESET, arr[i]);
+      sprintf(buffer, "%s%.3f%s", arr[i], (color ? ANSI_COLOR_BLUE : ""), (color ? ANSI_COLOR_RESET : ""));
     }
-    printf("[%16s] ", buffer);
+    printf((color ? "[%16s]" : "[%7s] "), buffer);
   }
   puts("\n");
 }
 
-int parseArguments(int argc, char **argv, int *timeSteps, int *printSteps, int *width, int *height, double *temp) {
+int parseArguments(int argc, char **argv, int *timeSteps, int *printSteps, int *width, int *height, double *temp, int *color) {
   int c;
-  while ((c = getopt(argc, argv, "s:t:w:h:p")) != -1) {
+  while ((c = getopt(argc, argv, "s:t:w:h:pc")) != -1) {
     switch (c) {
     case 's': {
       *timeSteps = atoi(optarg);
@@ -121,6 +122,10 @@ int parseArguments(int argc, char **argv, int *timeSteps, int *printSteps, int *
     }
     case 'p': {
       *printSteps = 1;
+      break;
+    }
+    case 'c': {
+      *color = 1;
       break;
     }
     default: {
