@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdbool.h>
+#include <time.h>
 
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_YELLOW  "\x1b[33m"
@@ -10,15 +12,20 @@
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
-void print(const int, double *, const int, const int, const double);
-int parseArguments(int, char **, int *, int *, int *, int *, double *, int *);
+void print(const bool, double *, const int, const int, const double);
+int parseArguments(int, char **, int *, bool *, int *, int *, double *, bool *, int *);
 
 int main(int argc, char **argv) {
-  int timeSteps = 5, printSteps = 0;
+  int timeSteps = 5;
+  bool printSteps = false;
   int metalWidth = 5, metalHeight = 10;
   double heaterTemp = 100.0;
-  int color = 0;
-  if (parseArguments(argc, argv, &timeSteps, &printSteps, &metalWidth, &metalHeight, &heaterTemp, &color)) return 1;
+  int delay_ns = 0;
+  bool color = false;
+  if (parseArguments(argc, argv, &timeSteps, &printSteps, &metalWidth, &metalHeight, &heaterTemp, &color, &delay_ns)) return 1;
+  struct timespec delay;
+  delay.tv_sec = 0;
+  delay.tv_nsec = delay_ns;
   const int ENVIRONMENT_WIDTH = metalWidth + 2, ENVIRONMENT_HEIGHT = metalHeight + 2;
   const int METAL_LEN = metalWidth * metalHeight, ENVIRONMENT_LEN = ENVIRONMENT_WIDTH * ENVIRONMENT_HEIGHT;
   double *environment = malloc(ENVIRONMENT_LEN * sizeof(double));
@@ -68,7 +75,11 @@ int main(int argc, char **argv) {
         environment[index] = metal[i];
       }
       if (printSteps) {
-        print(color, environment, ENVIRONMENT_WIDTH, ENVIRONMENT_HEIGHT, heaterTemp);
+        #pragma acc update host(environment[0:ENVIRONMENT_LEN])
+        {
+          print(color, environment, ENVIRONMENT_WIDTH, ENVIRONMENT_HEIGHT, heaterTemp);
+        }
+        nanosleep(&delay, NULL);
       }
     }
   }
@@ -79,7 +90,7 @@ int main(int argc, char **argv) {
   free(metal);
 }
 
-void print(const int color, double *arr, const int w, const int h, const double maxTemp) {
+void print(const bool color, double *arr, const int w, const int h, const double maxTemp) {
   for (int i = 0; i < w * h; ++i) {
     const int r = i / w, c = i % w;
     if (r != 0 && c == 0) puts("");
@@ -100,9 +111,9 @@ void print(const int color, double *arr, const int w, const int h, const double 
   puts("\n");
 }
 
-int parseArguments(int argc, char **argv, int *timeSteps, int *printSteps, int *width, int *height, double *temp, int *color) {
+int parseArguments(int argc, char **argv, int *timeSteps, bool *printSteps, int *width, int *height, double *temp, bool *color, int *delay) {
   int c;
-  while ((c = getopt(argc, argv, "s:t:w:h:pc")) != -1) {
+  while ((c = getopt(argc, argv, "s:t:w:h:pcd:")) != -1) {
     switch (c) {
     case 's': {
       *timeSteps = atoi(optarg);
@@ -121,11 +132,15 @@ int parseArguments(int argc, char **argv, int *timeSteps, int *printSteps, int *
       break;
     }
     case 'p': {
-      *printSteps = 1;
+      *printSteps = true;
       break;
     }
     case 'c': {
-      *color = 1;
+      *color = true;
+      break;
+    }
+    case 'd': {
+      *delay = atoi(optarg) * 1000000;
       break;
     }
     default: {
