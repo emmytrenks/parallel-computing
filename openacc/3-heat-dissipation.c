@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
   delay.tv_nsec = delay_ns;
   const int ENVIRONMENT_WIDTH = metalWidth + 2, ENVIRONMENT_HEIGHT = metalHeight + 2;
   const int METAL_LEN = metalWidth * metalHeight, ENVIRONMENT_LEN = ENVIRONMENT_WIDTH * ENVIRONMENT_HEIGHT;
-  double *environment = malloc(ENVIRONMENT_LEN * sizeof(double));
+  double *environment = (double *) malloc(ENVIRONMENT_LEN * sizeof(double));
   #pragma omp parallel for
   for (int i = 0; i < ENVIRONMENT_LEN; ++i) {
     const int r = i / ENVIRONMENT_WIDTH, c = i % ENVIRONMENT_WIDTH;
@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
     }
   }
   print(color, environment, ENVIRONMENT_WIDTH, ENVIRONMENT_HEIGHT, heaterTemp);
-  double *metal = malloc(METAL_LEN * sizeof(double));
+  double *metal = (double *) malloc(METAL_LEN * sizeof(double));
   int i;
   #pragma acc data copy(environment[0:ENVIRONMENT_LEN]), create(metal[0:METAL_LEN], i)
   {
