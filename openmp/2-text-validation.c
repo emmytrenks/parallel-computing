@@ -1,17 +1,27 @@
 #include <omp.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
 
-int isAlphanumeric(const char *str) {
+bool isAlphanumeric(const char *str) {
   const int size = strlen(str);
+  bool result = true;
   #pragma omp parallel for
   for (int index = 0; index < size; ++index) {
+    #pragma omp flush (result)
+    if (!result) continue;
+
     const char c = str[index];
     if (!(c >= '0' && c <= '9' ||
       c >= 'A' && c <= 'Z' ||
-      c >= 'a' && c <= 'z')) return 0;
+      c >= 'a' && c <= 'z')) {
+        //We don't need to specify atomic, because all
+        // threads can compete to set it to one value.
+        #pragma omp flush (result)
+        result = false;
+      }
   }
-  return 1;
+  return result;
 }
 
 int main(int argc, char **argv) {
