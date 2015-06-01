@@ -96,15 +96,15 @@ void print(const bool color, double *arr, const int w, const int h, const double
     if (r != 0 && c == 0) puts("");
     char buffer[32];
     if (arr[i] >= maxTemp * 0.9) {
-      sprintf(buffer, "%s%.3f%s", arr[i], (color ? ANSI_COLOR_RED : ""), (color ? ANSI_COLOR_RESET : ""));
+      sprintf(buffer, "%s%.3f%s", (color ? ANSI_COLOR_RED : ""), arr[i], (color ? ANSI_COLOR_RESET : ""));
     } else if (arr[i] >= maxTemp * 0.75) {
-      sprintf(buffer, "%s%.3f%s", arr[i], (color ? ANSI_COLOR_MAGENTA : ""), (color ? ANSI_COLOR_RESET : ""));
+      sprintf(buffer, "%s%.3f%s", (color ? ANSI_COLOR_MAGENTA : ""), arr[i], (color ? ANSI_COLOR_RESET : ""));
     } else if (arr[i] >= maxTemp * 0.5) {
-      sprintf(buffer, "%s%.3f%s", arr[i], (color ? ANSI_COLOR_YELLOW : ""), (color ? ANSI_COLOR_RESET : ""));
+      sprintf(buffer, "%s%.3f%s", (color ? ANSI_COLOR_YELLOW : ""), arr[i], (color ? ANSI_COLOR_RESET : ""));
     } else if (arr[i] >= maxTemp * 0.25) {
-      sprintf(buffer, "%s%.3f%s", arr[i], (color ? ANSI_COLOR_CYAN : ""), (color ? ANSI_COLOR_RESET : ""));
+      sprintf(buffer, "%s%.3f%s", (color ? ANSI_COLOR_CYAN : ""), arr[i], (color ? ANSI_COLOR_RESET : ""));
     } else {
-      sprintf(buffer, "%s%.3f%s", arr[i], (color ? ANSI_COLOR_BLUE : ""), (color ? ANSI_COLOR_RESET : ""));
+      sprintf(buffer, "%s%.3f%s", (color ? ANSI_COLOR_BLUE : ""), arr[i], (color ? ANSI_COLOR_RESET : ""));
     }
     printf((color ? "[%16s]" : "[%7s] "), buffer);
   }
