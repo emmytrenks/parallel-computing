@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include <time.h>
 
+#define PRINT_ENABLED true
+
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_YELLOW  "\x1b[33m"
 #define ANSI_COLOR_BLUE    "\x1b[34m"
@@ -16,16 +18,19 @@ void print(const bool, double *, const int, const int, const double);
 int parseArguments(int, char **, int *, bool *, int *, int *, double *, bool *, int *);
 
 int main(int argc, char **argv) {
-  int timeSteps = 5;
-  bool printSteps = false;
-  int metalWidth = 5, metalHeight = 10;
-  double heaterTemp = 100.0;
+  /* Parameter defaults */
+  int timeSteps = 5;//Number of time steps in heat dissipation
+  bool printSteps = false;//Print each step, or just result
+  int metalWidth = 5, metalHeight = 10;//Section of metal width and height
+  double heaterTemp = 100.0;//The heating element temperature
   int delay_ns = 0;
-  bool color = false;
+  bool color = false;//Use color (only suggested for terminal display)
   if (parseArguments(argc, argv, &timeSteps, &printSteps, &metalWidth, &metalHeight, &heaterTemp, &color, &delay_ns)) return 1;
   struct timespec delay;
   delay.tv_sec = 0;
   delay.tv_nsec = delay_ns;
+  //We need to bound the metal with insulation, and we know this adds
+  // two rows and columns
   const int ENVIRONMENT_WIDTH = metalWidth + 2, ENVIRONMENT_HEIGHT = metalHeight + 2;
   const int METAL_LEN = metalWidth * metalHeight, ENVIRONMENT_LEN = ENVIRONMENT_WIDTH * ENVIRONMENT_HEIGHT;
   double *environment = (double *) malloc(ENVIRONMENT_LEN * sizeof(double));
@@ -38,9 +43,16 @@ int main(int argc, char **argv) {
       environment[i] = 0;
     }
   }
+  #ifdef PRINT_ENABLED
   print(color, environment, ENVIRONMENT_WIDTH, ENVIRONMENT_HEIGHT, heaterTemp);
+  #endif
   double *metal = (double *) malloc(METAL_LEN * sizeof(double));
   int i;
+  //We need to copy in and out our environment; however, metal
+  // is strictly use for calculations, thus it is safe to create it
+  // (create allocates the memory without copying host information
+  // remember that this memory may have residue and needs set before
+  // utilization)
   #pragma acc data copy(environment[0:ENVIRONMENT_LEN]), create(metal[0:METAL_LEN], i)
   {
     #pragma acc parallel loop
@@ -74,6 +86,7 @@ int main(int argc, char **argv) {
           index = 1 + (r + 1) * ENVIRONMENT_WIDTH + c;
         environment[index] = metal[i];
       }
+      #ifdef PRINT_ENABLED
       if (printSteps) {
         #pragma acc update host(environment[0:ENVIRONMENT_LEN])
         {
@@ -81,11 +94,15 @@ int main(int argc, char **argv) {
         }
         nanosleep(&delay, NULL);
       }
+      #endif
     }
   }
+  #ifdef PRINT_ENABLED
   if (!printSteps) {
     print(color, environment, ENVIRONMENT_WIDTH, ENVIRONMENT_HEIGHT, heaterTemp);
   }
+  #endif
+  //Free dynamicly allocated arrays
   free(environment);
   free(metal);
 }
@@ -140,6 +157,7 @@ int parseArguments(int argc, char **argv, int *timeSteps, bool *printSteps, int 
       break;
     }
     case 'd': {
+      //1000000 nano seconds in a millisecond
       *delay = atoi(optarg) * 1000000;
       break;
     }
