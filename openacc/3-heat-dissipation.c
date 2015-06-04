@@ -6,6 +6,7 @@
 #include <time.h>
 
 #define PRINT_ENABLED true
+#define ACC_ENABLED true
 
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_YELLOW  "\x1b[33m"
@@ -43,7 +44,7 @@ int main(int argc, char **argv) {
       environment[i] = 0;
     }
   }
-  #ifdef PRINT_ENABLED
+  #if PRINT_ENABLED
   print(color, environment, ENVIRONMENT_WIDTH, ENVIRONMENT_HEIGHT, heaterTemp);
   #endif
   double *metal = (double *) malloc(METAL_LEN * sizeof(double));
@@ -53,16 +54,22 @@ int main(int argc, char **argv) {
   // (create allocates the memory without copying host information
   // remember that this memory may have residue and needs set before
   // utilization)
+  #if ACC_ENABLED
   #pragma acc data copy(environment[0:ENVIRONMENT_LEN]), create(metal[0:METAL_LEN], i)
+  #endif
   {
+    #if ACC_ENABLED
     #pragma acc parallel loop
+    #endif
     for (i = 0; i < METAL_LEN; ++i) {
       const int r = i / metalWidth, c = i % metalWidth,
         index = 1 + (r + 1) * ENVIRONMENT_WIDTH + c;
       metal[i] = environment[index];
     }
     for (int c = 0; c < timeSteps; c++) {
+      #if ACC_ENABLED
       #pragma acc parallel loop
+      #endif
       for (i = 0; i < METAL_LEN; ++i) {
         const int r = i / metalWidth, c = i % metalWidth,
           index = 1 + (r + 1) * ENVIRONMENT_WIDTH + c;
@@ -80,15 +87,19 @@ int main(int argc, char **argv) {
         metal[i] = ourTemp;
       }
 
+      #if ACC_ENABLED
       #pragma acc parallel loop
+      #endif
       for (i = 0; i < METAL_LEN; ++i) {
         const int r = i / metalWidth, c = i % metalWidth,
           index = 1 + (r + 1) * ENVIRONMENT_WIDTH + c;
         environment[index] = metal[i];
       }
-      #ifdef PRINT_ENABLED
+      #if PRINT_ENABLED
       if (printSteps) {
+        #if ACC_ENABLED
         #pragma acc update host(environment[0:ENVIRONMENT_LEN])
+        #endif
         {
           print(color, environment, ENVIRONMENT_WIDTH, ENVIRONMENT_HEIGHT, heaterTemp);
         }
@@ -97,7 +108,7 @@ int main(int argc, char **argv) {
       #endif
     }
   }
-  #ifdef PRINT_ENABLED
+  #if PRINT_ENABLED
   if (!printSteps) {
     print(color, environment, ENVIRONMENT_WIDTH, ENVIRONMENT_HEIGHT, heaterTemp);
   }
