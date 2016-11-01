@@ -18,10 +18,10 @@ MPI_RECV | MPI_RECV(start, count, datatype, source, tag, comm, status)<br>-> wai
 # Flynn's Taxonomy
 Name | Meaning | Details
 --- | --- | ---
-SISD | Single Instruction Stream, <br>Single Data Stream  | info
-SIMD | Single Instruction Stream, <br> Multiple Data Stream | info
-MISD | Multiple Instruction Stream, <br> Single Data Stream | info
-MIMD | Multiple Instruction Stream, <br> Multiple Data Stream | info
+SISD | Single Instruction Stream, <br>Single Data Stream  | update
+SIMD | Single Instruction Stream, <br> Multiple Data Stream | update
+MISD | Multiple Instruction Stream, <br> Single Data Stream | update
+MIMD | Multiple Instruction Stream, <br> Multiple Data Stream | update
 
 
 # Datatypes
